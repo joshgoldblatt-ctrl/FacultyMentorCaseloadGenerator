@@ -440,6 +440,7 @@
                 <button class="tab-button" onclick="switchTab('faculty')">Faculty Details</button>
                 <button class="tab-button" onclick="switchTab('orphaned')">Orphaned Students</button>
                 <button class="tab-button" onclick="switchTab('unassigned')" style="display:none;" id="unassignedTabBtn">Unassigned Analysis</button>
+                <button class="tab-button" onclick="switchTab('deptSummary')" style="display:none;" id="deptSummaryTabBtn">Department Summary</button>
             </div>
 
             <!-- Overview Tab -->
@@ -521,6 +522,13 @@
             <div class="tab-content" id="unassignedTab">
                 <h2>Unassigned Students Analysis</h2>
                 <div id="unassignedAnalysis"></div>
+            </div>
+
+            <!-- Department Summary Tab -->
+            <div class="tab-content" id="deptSummaryTab">
+                <h2>Department Summary (Post-Assignment)</h2>
+                <p style="color: #666; margin-bottom: 20px;">Summary statistics by Academic Department and Subdivision after new assignments.</p>
+                <div id="deptSummaryContent"></div>
             </div>
 
             <button id="exportButton" class="export-button" style="display:none;">Copy to CSV</button>
@@ -1168,8 +1176,10 @@
             displayPostAssignmentStats();
             displayFacultyDetails(mentorPool);
             displayUnassignedAnalysis();
+            displayDepartmentSummary(mentorPool);
             document.getElementById('exportButton').style.display = 'block';
             document.getElementById('unassignedTabBtn').style.display = 'inline-block';
+            document.getElementById('deptSummaryTabBtn').style.display = 'inline-block';
             
             showAlert(`Successfully assigned ${newAssignments.length} students to mentors!`, 'success');
         }
@@ -1326,6 +1336,130 @@
                 });
             });
             
+            container.innerHTML = html;
+        }
+
+        function displayDepartmentSummary(mentorPool) {
+            const container = document.getElementById('deptSummaryContent');
+
+            // Group by department and subdivision
+            const byDept = {};
+            Object.entries(mentorPool).forEach(([key, mentors]) => {
+                mentors.forEach(mentor => {
+                    if (!byDept[mentor.department]) {
+                        byDept[mentor.department] = {
+                            mentors: new Set(),
+                            totalStudents: 0,
+                            subdivisions: {}
+                        };
+                    }
+
+                    byDept[mentor.department].mentors.add(mentor.id);
+                    byDept[mentor.department].totalStudents += mentor.currentLoad;
+
+                    if (!byDept[mentor.department].subdivisions[mentor.subdivision]) {
+                        byDept[mentor.department].subdivisions[mentor.subdivision] = {
+                            mentors: new Set(),
+                            totalStudents: 0
+                        };
+                    }
+                    byDept[mentor.department].subdivisions[mentor.subdivision].mentors.add(mentor.id);
+                    byDept[mentor.department].subdivisions[mentor.subdivision].totalStudents += mentor.currentLoad;
+                });
+            });
+
+            let html = `
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Academic Department</th>
+                                <th>Academic Department_sub</th>
+                                <th>Number of Mentors</th>
+                                <th>Number of Students</th>
+                                <th>Avg Caseload per Mentor</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            // Sort departments alphabetically
+            const sortedDepts = Object.keys(byDept).sort();
+
+            sortedDepts.forEach(dept => {
+                const deptData = byDept[dept];
+                const deptMentorCount = deptData.mentors.size;
+                const deptStudentCount = deptData.totalStudents;
+                const deptAvgCaseload = deptMentorCount > 0 ? (deptStudentCount / deptMentorCount).toFixed(1) : '0.0';
+
+                // Department total row (highlighted)
+                html += `
+                    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold;">
+                        <td>${dept}</td>
+                        <td><em>(Department Total)</em></td>
+                        <td>${deptMentorCount}</td>
+                        <td>${deptStudentCount}</td>
+                        <td>${deptAvgCaseload}</td>
+                    </tr>`;
+
+                // Sort subdivisions alphabetically
+                const sortedSubdivs = Object.keys(deptData.subdivisions).sort();
+
+                sortedSubdivs.forEach(subdiv => {
+                    const subdivData = deptData.subdivisions[subdiv];
+                    const subdivMentorCount = subdivData.mentors.size;
+                    const subdivStudentCount = subdivData.totalStudents;
+                    const subdivAvgCaseload = subdivMentorCount > 0 ? (subdivStudentCount / subdivMentorCount).toFixed(1) : '0.0';
+
+                    html += `
+                        <tr>
+                            <td style="padding-left: 30px; color: #666;">↳</td>
+                            <td>${subdiv || '(No subdivision)'}</td>
+                            <td>${subdivMentorCount}</td>
+                            <td>${subdivStudentCount}</td>
+                            <td>${subdivAvgCaseload}</td>
+                        </tr>`;
+                });
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Summary Cards by Department</h3>
+                    <div class="dashboard-grid">`;
+
+            sortedDepts.forEach(dept => {
+                const deptData = byDept[dept];
+                const deptMentorCount = deptData.mentors.size;
+                const deptStudentCount = deptData.totalStudents;
+                const deptAvgCaseload = deptMentorCount > 0 ? (deptStudentCount / deptMentorCount).toFixed(1) : '0.0';
+
+                html += `
+                    <div class="stat-card">
+                        <h3>${dept}</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #667eea;">${deptMentorCount}</div>
+                                <div style="font-size: 0.8em; color: #666;">Mentors</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #4caf50;">${deptStudentCount}</div>
+                                <div style="font-size: 0.8em; color: #666;">Students</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">${deptAvgCaseload}</div>
+                                <div style="font-size: 0.8em; color: #666;">Avg Load</div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                    </div>
+                </div>`;
+
             container.innerHTML = html;
         }
 
