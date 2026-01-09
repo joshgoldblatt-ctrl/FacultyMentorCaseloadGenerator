@@ -437,10 +437,10 @@
                 <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
                 <button class="tab-button" onclick="switchTab('department')">By Department</button>
                 <button class="tab-button" onclick="switchTab('controls')">Assignment Controls</button>
+                <button class="tab-button" onclick="switchTab('deptSummary')" style="display:none;" id="deptSummaryTabBtn">Department Summary</button>
                 <button class="tab-button" onclick="switchTab('faculty')">Faculty Details</button>
                 <button class="tab-button" onclick="switchTab('orphaned')">Orphaned Students</button>
                 <button class="tab-button" onclick="switchTab('unassigned')" style="display:none;" id="unassignedTabBtn">Unassigned Analysis</button>
-                <button class="tab-button" onclick="switchTab('deptSummary')" style="display:none;" id="deptSummaryTabBtn">Department Summary</button>
             </div>
 
             <!-- Overview Tab -->
@@ -1385,6 +1385,16 @@
             // Sort departments alphabetically
             const sortedDepts = Object.keys(byDept).sort();
 
+            // Calculate grand totals
+            let grandTotalMentors = new Set();
+            let grandTotalStudents = 0;
+            sortedDepts.forEach(dept => {
+                byDept[dept].mentors.forEach(id => grandTotalMentors.add(id));
+                grandTotalStudents += byDept[dept].totalStudents;
+            });
+            const grandTotalMentorCount = grandTotalMentors.size;
+            const grandAvgCaseload = grandTotalMentorCount > 0 ? (grandTotalStudents / grandTotalMentorCount).toFixed(1) : '0.0';
+
             sortedDepts.forEach(dept => {
                 const deptData = byDept[dept];
                 const deptMentorCount = deptData.mentors.size;
@@ -1420,6 +1430,15 @@
                         </tr>`;
                 });
             });
+
+            // Add grand total row
+            html += `
+                    <tr style="background: #333; color: white; font-weight: bold; font-size: 1.1em;">
+                        <td colspan="2">GRAND TOTAL</td>
+                        <td>${grandTotalMentorCount}</td>
+                        <td>${grandTotalStudents}</td>
+                        <td>${grandAvgCaseload}</td>
+                    </tr>`;
 
             html += `
                         </tbody>
