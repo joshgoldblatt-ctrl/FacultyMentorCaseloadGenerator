@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Mentor Caseload Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-box.uploaded {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-label:hover {
+            transform: translateY(-2px);
+        }
+
+        .file-info {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .required-columns {
+            text-align: left;
+            margin-top: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .process-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .process-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .process-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .dashboard {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .controls-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .generate-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .generate-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .export-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .export-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 188, 212, 0.3);
+        }
+
+        .data-table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9ff;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .checkbox-group {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-item:hover {
+            background: #f8f9ff;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .select-all-btn {
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Faculty Mentor Caseload Management System</h1>
+
+        <!-- File Upload Section -->
+        <div class="upload-section">
+            <div class="upload-box" id="studentUploadBox">
+                <h3>Student File</h3>
+                <input type="file" id="studentFile" class="file-input" accept=".csv">
+                <label for="studentFile" class="upload-label">Choose Student CSV</label>
+                <div class="file-info" id="studentFileInfo">No file selected</div>
+                <div class="required-columns">
+                    <strong>Required columns:</strong><br>
+                    • Student ID<br>
+                    • Student Academic Department<br>
+                    • Student Academic Department_sub<br>
+                    • Faculty Mentor (can be empty)<br>
+                    • Mentor ID (can be empty)
+                </div>
+            </div>
+
+            <div class="upload-box" id="facultyUploadBox">
+                <h3>Faculty Mentor File</h3>
+                <input type="file" id="facultyFile" class="file-input" accept=".csv">
+                <label for="facultyFile" class="upload-label">Choose Faculty CSV</label>
+                <div class="file-info" id="facultyFileInfo">No file selected</div>
+                <div class="required-columns">
+                    <strong>Required columns:</strong><br>
+                    • DEPARTMENT<br>
+                    • DEPARTMENT_SUB<br>
+                    • DEPARTMENT_HOME<br>
+                    • Faculty Mentor<br>
+                    • Staff_ID
+                </div>
+            </div>
+        </div>
+
+        <button id="processButton" class="process-button" disabled>Process Files</button>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+
+        <div class="alert" id="alertBox"></div>
+
+        <!-- Dashboard Section -->
+        <div class="dashboard" id="dashboard">
+            <div class="tab-navigation">
+                <button class="tab-button active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab-button" onclick="switchTab('department')">By Department</button>
+                <button class="tab-button" onclick="switchTab('controls')">Assignment Controls</button>
+                <button class="tab-button" onclick="switchTab('deptSummary')" style="display:none;" id="deptSummaryTabBtn">Department Summary</button>
+                <button class="tab-button" onclick="switchTab('faculty')">Faculty Details</button>
+                <button class="tab-button" onclick="switchTab('orphaned')">Orphaned Students</button>
+                <button class="tab-button" onclick="switchTab('unassigned')" style="display:none;" id="unassignedTabBtn">Unassigned Analysis</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overviewTab">
+                <h2>Overall Statistics</h2>
+                <div class="dashboard-grid" id="overallStats"></div>
+            </div>
+
+            <!-- Department Tab -->
+            <div class="tab-content" id="departmentTab">
+                <h2>Department & Subdivision Statistics</h2>
+                <div id="departmentStats"></div>
+            </div>
+
+            <!-- Controls Tab -->
+            <div class="tab-content" id="controlsTab">
+                <h2>Assignment Controls</h2>
+                <div class="controls-section">
+                    <div class="control-group">
+                        <label>Maximum Caseload Limit Type:</label>
+                        <select id="limitType">
+                            <option value="general">General (same for all)</option>
+                            <option value="department">By Department</option>
+                            <option value="subdivision">By Subdivision</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group" id="generalLimitGroup">
+                        <label>Maximum Students per Mentor:</label>
+                        <input type="number" id="generalLimit" value="30" min="1">
+                    </div>
+
+                    <div class="control-group" id="departmentLimitsGroup" style="display:none;">
+                        <label>Department Limits:</label>
+                        <div id="departmentLimitsList"></div>
+                    </div>
+
+                    <div class="control-group" id="subdivisionLimitsGroup" style="display:none;">
+                        <label>Subdivision Limits:</label>
+                        <div id="subdivisionLimitsList"></div>
+                    </div>
+
+                    <h3 style="margin-top: 20px;">Exclusion Settings</h3>
+                    
+                    <div class="control-group">
+                        <label>Exclude Departments from Assignment:</label>
+                        <button class="select-all-btn" onclick="toggleAllDepartments()">Toggle All</button>
+                        <div class="checkbox-group" id="departmentExclusions"></div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Exclude Subdivisions from Assignment:</label>
+                        <button class="select-all-btn" onclick="toggleAllSubdivisions()">Toggle All</button>
+                        <div class="checkbox-group" id="subdivisionExclusions"></div>
+                    </div>
+
+                    <button id="generateButton" class="generate-button">Generate Caseload Assignments</button>
+                </div>
+
+                <div id="postAssignmentStats" style="display:none;">
+                    <h3>Post-Assignment Statistics</h3>
+                    <div class="dashboard-grid" id="newStats"></div>
+                </div>
+            </div>
+
+            <!-- Faculty Details Tab -->
+            <div class="tab-content" id="facultyTab">
+                <h2>Faculty Mentor Caseloads</h2>
+                <div id="facultyDetails"></div>
+            </div>
+
+            <!-- Orphaned Students Tab -->
+            <div class="tab-content" id="orphanedTab">
+                <h2>Students with Inactive/Retired Mentors</h2>
+                <div id="orphanedStudents"></div>
+            </div>
+
+            <!-- Unassigned Analysis Tab -->
+            <div class="tab-content" id="unassignedTab">
+                <h2>Unassigned Students Analysis</h2>
+                <div id="unassignedAnalysis"></div>
+            </div>
+
+            <!-- Department Summary Tab -->
+            <div class="tab-content" id="deptSummaryTab">
+                <h2>Department Summary (Post-Assignment)</h2>
+                <p style="color: #666; margin-bottom: 20px;">Summary statistics by Academic Department and Subdivision after new assignments.</p>
+                <div id="deptSummaryContent"></div>
+            </div>
+
+            <button id="exportButton" class="export-button" style="display:none;">Copy to CSV</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let studentData = [];
+        let facultyData = [];
+        let processedData = null;
+        let newAssignments = [];
+        let unassignedStudents = [];
+
+        // File upload handlers
+        document.getElementById('studentFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('studentFileInfo').textContent = `Selected: ${file.name}`;
+                document.getElementById('studentUploadBox').classList.add('uploaded');
+                checkProcessButton();
+            }
+        });
+
+        document.getElementById('facultyFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('facultyFileInfo').textContent = `Selected: ${file.name}`;
+                document.getElementById('facultyUploadBox').classList.add('uploaded');
+                checkProcessButton();
+            }
+        });
+
+        function checkProcessButton() {
+            const studentFile = document.getElementById('studentFile').files[0];
+            const facultyFile = document.getElementById('facultyFile').files[0];
+            document.getElementById('processButton').disabled = !(studentFile && facultyFile);
+        }
+
+        // CSV Parser
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let j = 0; j < lines[i].length; j++) {
+                    const char = lines[i][j];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim().replace(/^"|"$/g, ''));
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim().replace(/^"|"$/g, ''));
+                
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                data.push(row);
+            }
+            
+            return data;
+        }
+
+        // Process files
+        document.getElementById('processButton').addEventListener('click', async function() {
+            const studentFile = document.getElementById('studentFile').files[0];
+            const facultyFile = document.getElementById('facultyFile').files[0];
+            
+            showProgress(0);
+            
+            try {
+                // Read student file
+                const studentText = await readFile(studentFile);
+                showProgress(25);
+                studentData = parseCSV(studentText);
+                
+                // Read faculty file
+                const facultyText = await readFile(facultyFile);
+                showProgress(50);
+                facultyData = parseCSV(facultyText);
+                
+                // Process data
+                showProgress(75);
+                processData();
+                
+                showProgress(100);
+                showAlert('Files processed successfully!', 'success');
+                
+                setTimeout(() => {
+                    document.getElementById('progressBar').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                }, 1000);
+                
+            } catch (error) {
+                showAlert('Error processing files: ' + error.message, 'error');
+                console.error(error);
+            }
+        });
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function showProgress(percent) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.style.display = 'block';
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = percent + '%';
+        }
+
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = 'alert ' + type;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        function processData() {
+            // Find orphaned students
+            const activeMentorIds = new Set(facultyData.map(f => f['Staff_ID']));
+            const orphaned = studentData.filter(s => 
+                s['Mentor ID'] && !activeMentorIds.has(s['Mentor ID'])
+            );
+            
+            // Calculate statistics
+            const stats = calculateStatistics();
+            
+            // Display results
+            displayOverallStats(stats);
+            displayDepartmentStats(stats);
+            displayOrphanedStudents(orphaned);
+            setupControls(stats);
+            
+            processedData = stats;
+        }
+
+        function calculateStatistics() {
+            const stats = {
+                total: studentData.length,
+                assigned: 0,
+                unassigned: 0,
+                departments: {},
+                facultyCaseloads: {},
+                orphaned: []
+            };
+            
+            const activeMentorIds = new Set(facultyData.map(f => f['Staff_ID']));
+            
+            studentData.forEach(student => {
+                const dept = student['Student Academic Department'];
+                const subdiv = student['Student Academic Department_sub'];
+                const mentorId = student['Mentor ID'];
+                const mentorName = student['Faculty Mentor'];
+                
+                // Initialize department stats
+                if (!stats.departments[dept]) {
+                    stats.departments[dept] = {
+                        total: 0,
+                        assigned: 0,
+                        unassigned: 0,
+                        subdivisions: {}
+                    };
+                }
+                
+                if (!stats.departments[dept].subdivisions[subdiv]) {
+                    stats.departments[dept].subdivisions[subdiv] = {
+                        total: 0,
+                        assigned: 0,
+                        unassigned: 0,
+                        mentors: new Set()
+                    };
+                }
+                
+                stats.departments[dept].total++;
+                stats.departments[dept].subdivisions[subdiv].total++;
+                
+                if (mentorId && activeMentorIds.has(mentorId)) {
+                    stats.assigned++;
+                    stats.departments[dept].assigned++;
+                    stats.departments[dept].subdivisions[subdiv].assigned++;
+                    stats.departments[dept].subdivisions[subdiv].mentors.add(mentorId);
+                    
+                    if (!stats.facultyCaseloads[mentorId]) {
+                        stats.facultyCaseloads[mentorId] = {
+                            name: mentorName,
+                            students: [],
+                            department: student['Faculty Academic Department'],
+                            subdivision: student['Faculty Academic Department_sub']
+                        };
+                    }
+                    stats.facultyCaseloads[mentorId].students.push(student);
+                } else if (mentorId && !activeMentorIds.has(mentorId)) {
+                    stats.orphaned.push(student);
+                    stats.unassigned++;
+                    stats.departments[dept].unassigned++;
+                    stats.departments[dept].subdivisions[subdiv].unassigned++;
+                } else {
+                    stats.unassigned++;
+                    stats.departments[dept].unassigned++;
+                    stats.departments[dept].subdivisions[subdiv].unassigned++;
+                }
+            });
+            
+            return stats;
+        }
+
+        function displayOverallStats(stats) {
+            const container = document.getElementById('overallStats');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Students</h3>
+                    <div class="stat-value">${stats.total}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Currently Assigned</h3>
+                    <div class="stat-value">${stats.assigned}</div>
+                    <div class="stat-label">${((stats.assigned/stats.total)*100).toFixed(1)}% of total</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Need Assignment</h3>
+                    <div class="stat-value">${stats.unassigned}</div>
+                    <div class="stat-label">${((stats.unassigned/stats.total)*100).toFixed(1)}% of total</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Mentors</h3>
+                    <div class="stat-value">${Object.keys(stats.facultyCaseloads).length}</div>
+                    <div class="stat-label">With current assignments</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Average Caseload</h3>
+                    <div class="stat-value">${stats.assigned > 0 ? (stats.assigned/Object.keys(stats.facultyCaseloads).length).toFixed(1) : 0}</div>
+                    <div class="stat-label">Students per mentor</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Orphaned Students</h3>
+                    <div class="stat-value">${stats.orphaned.length}</div>
+                    <div class="stat-label">Mentor no longer active</div>
+                </div>
+            `;
+        }
+
+        function displayDepartmentStats(stats) {
+            const container = document.getElementById('departmentStats');
+            let html = '';
+            
+            Object.entries(stats.departments).forEach(([dept, deptData]) => {
+                html += `
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th colspan="5">${dept}</th>
+                                </tr>
+                                <tr>
+                                    <th>Subdivision</th>
+                                    <th>Total</th>
+                                    <th>Assigned</th>
+                                    <th>Unassigned</th>
+                                    <th>Active Mentors</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                Object.entries(deptData.subdivisions).forEach(([subdiv, subdivData]) => {
+                    html += `
+                        <tr>
+                            <td>${subdiv || '(No subdivision)'}</td>
+                            <td>${subdivData.total}</td>
+                            <td>${subdivData.assigned}</td>
+                            <td>${subdivData.unassigned}</td>
+                            <td>${subdivData.mentors.size}</td>
+                        </tr>`;
+                });
+                
+                html += `
+                        <tr style="font-weight: bold; background: #f8f9ff;">
+                            <td>Department Total</td>
+                            <td>${deptData.total}</td>
+                            <td>${deptData.assigned}</td>
+                            <td>${deptData.unassigned}</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function displayOrphanedStudents(orphaned) {
+            const container = document.getElementById('orphanedStudents');
+            
+            if (orphaned.length === 0) {
+                container.innerHTML = '<p style="color: green;">No orphaned students found. All assigned students have active mentors.</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="alert warning" style="display: block;">
+                    Found ${orphaned.length} students assigned to mentors who are no longer on the active faculty list.
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Subdivision</th>
+                                <th>Previous Mentor</th>
+                                <th>Previous Mentor ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            orphaned.forEach(student => {
+                html += `
+                    <tr>
+                        <td>${student['Student ID']}</td>
+                        <td>${student['Name'] || 'N/A'}</td>
+                        <td>${student['Student Academic Department']}</td>
+                        <td>${student['Student Academic Department_sub'] || 'N/A'}</td>
+                        <td>${student['Faculty Mentor'] || 'Unknown'}</td>
+                        <td>${student['Mentor ID']}</td>
+                    </tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function setupControls(stats) {
+            // Setup limit type selector
+            document.getElementById('limitType').addEventListener('change', function() {
+                document.getElementById('generalLimitGroup').style.display = 
+                    this.value === 'general' ? 'block' : 'none';
+                document.getElementById('departmentLimitsGroup').style.display = 
+                    this.value === 'department' ? 'block' : 'none';
+                document.getElementById('subdivisionLimitsGroup').style.display = 
+                    this.value === 'subdivision' ? 'block' : 'none';
+            });
+            
+            // Setup department limits
+            const deptLimitsList = document.getElementById('departmentLimitsList');
+            let deptHtml = '';
+            Object.keys(stats.departments).forEach(dept => {
+                deptHtml += `
+                    <div style="margin-bottom: 10px;">
+                        <label>${dept}:</label>
+                        <input type="number" class="dept-limit" data-dept="${dept}" value="30" min="1" style="width: 80px;">
+                    </div>`;
+            });
+            deptLimitsList.innerHTML = deptHtml;
+            
+            // Setup subdivision limits
+            const subdivLimitsList = document.getElementById('subdivisionLimitsList');
+            let subdivHtml = '';
+            Object.entries(stats.departments).forEach(([dept, deptData]) => {
+                Object.keys(deptData.subdivisions).forEach(subdiv => {
+                    subdivHtml += `
+                        <div style="margin-bottom: 10px;">
+                            <label>${dept} - ${subdiv || '(No subdivision)'}:</label>
+                            <input type="number" class="subdiv-limit" 
+                                   data-dept="${dept}" data-subdiv="${subdiv}" 
+                                   value="30" min="1" style="width: 80px;">
+                        </div>`;
+                });
+            });
+            subdivLimitsList.innerHTML = subdivHtml;
+
+            // Setup department exclusions
+            const deptExclusions = document.getElementById('departmentExclusions');
+            let deptExclusionHtml = '';
+            Object.keys(stats.departments).forEach(dept => {
+                deptExclusionHtml += `
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="exclude-dept-${dept}" value="${dept}" checked>
+                        <label for="exclude-dept-${dept}">${dept}</label>
+                    </div>`;
+            });
+            deptExclusions.innerHTML = deptExclusionHtml;
+
+            // Setup subdivision exclusions
+            const subdivExclusions = document.getElementById('subdivisionExclusions');
+            let subdivExclusionHtml = '';
+            Object.entries(stats.departments).forEach(([dept, deptData]) => {
+                Object.keys(deptData.subdivisions).forEach(subdiv => {
+                    const key = `${dept}|||${subdiv}`;
+                    subdivExclusionHtml += `
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="exclude-subdiv-${key}" value="${key}" checked>
+                            <label for="exclude-subdiv-${key}">${dept} - ${subdiv || '(No subdivision)'}</label>
+                        </div>`;
+                });
+            });
+            subdivExclusions.innerHTML = subdivExclusionHtml;
+        }
+
+        function toggleAllDepartments() {
+            const checkboxes = document.querySelectorAll('#departmentExclusions input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+
+        function toggleAllSubdivisions() {
+            const checkboxes = document.querySelectorAll('#subdivisionExclusions input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+        }
+
+        // Generate caseload assignments
+        document.getElementById('generateButton').addEventListener('click', function() {
+            generateAssignments();
+        });
+
+        function generateAssignments() {
+            // Get excluded departments
+            const excludedDepts = new Set();
+            document.querySelectorAll('#departmentExclusions input[type="checkbox"]:not(:checked)').forEach(cb => {
+                excludedDepts.add(cb.value);
+            });
+
+            // Get excluded subdivisions
+            const excludedSubdivs = new Set();
+            document.querySelectorAll('#subdivisionExclusions input[type="checkbox"]:not(:checked)').forEach(cb => {
+                excludedSubdivs.add(cb.value);
+            });
+
+            // Get limits
+            const limitType = document.getElementById('limitType').value;
+            const limits = {};
+            
+            if (limitType === 'general') {
+                limits.general = parseInt(document.getElementById('generalLimit').value);
+            } else if (limitType === 'department') {
+                document.querySelectorAll('.dept-limit').forEach(input => {
+                    limits[input.dataset.dept] = parseInt(input.value);
+                });
+            } else if (limitType === 'subdivision') {
+                document.querySelectorAll('.subdiv-limit').forEach(input => {
+                    const key = `${input.dataset.dept}|||${input.dataset.subdiv}`;
+                    limits[key] = parseInt(input.value);
+                });
+            }
+            
+            // Create mentor pool with current caseloads
+            const mentorPool = {};
+            const mentorPoolByDept = {}; // New pool organized by department only
+            
+            facultyData.forEach(faculty => {
+                const mentorId = faculty['Staff_ID'];
+                const dept = faculty['DEPARTMENT'];
+                const subdiv = faculty['DEPARTMENT_SUB'];
+                const key = `${dept}|||${subdiv}`;
+                
+                // Original pool by subdivision
+                if (!mentorPool[key]) {
+                    mentorPool[key] = [];
+                }
+                
+                const mentorObj = {
+                    id: mentorId,
+                    name: faculty['Faculty Mentor'],
+                    department: dept,
+                    subdivision: subdiv,
+                    departmentHome: faculty['DEPARTMENT_HOME'],
+                    currentLoad: 0,
+                    preExistingLoad: 0,
+                    newAssignments: 0,
+                    maxLoad: getMaxLoad(limitType, limits, dept, subdiv)
+                };
+                
+                mentorPool[key].push(mentorObj);
+                
+                // Department-level pool for BAT flexibility
+                if (!mentorPoolByDept[dept]) {
+                    mentorPoolByDept[dept] = [];
+                }
+                mentorPoolByDept[dept].push(mentorObj);
+            });
+            
+            // Count existing assignments
+            studentData.forEach(student => {
+                const mentorId = student['Mentor ID'];
+                if (mentorId) {
+                    // Find mentor in pool
+                    Object.values(mentorPool).forEach(mentors => {
+                        const mentor = mentors.find(m => m.id === mentorId);
+                        if (mentor) {
+                            mentor.currentLoad++;
+                            mentor.preExistingLoad++;
+                        }
+                    });
+                }
+            });
+            
+            // Assign unassigned students and track reasons for non-assignment
+            newAssignments = [];
+            unassignedStudents = [];
+            const activeMentorIds = new Set(facultyData.map(f => f['Staff_ID']));
+            const deferredBATStudents = []; // Students to try in phase 2
+            
+            // PHASE 1: Exact subdivision matching
+            studentData.forEach(student => {
+                const dept = student['Student Academic Department'];
+                const subdiv = student['Student Academic Department_sub'];
+                const key = `${dept}|||${subdiv}`;
+                
+                // Skip if already has an active mentor
+                if (student['Mentor ID'] && activeMentorIds.has(student['Mentor ID'])) {
+                    return;
+                }
+                
+                // Track reason if department is excluded
+                if (excludedDepts.has(dept)) {
+                    unassignedStudents.push({
+                        ...student,
+                        reason: 'Department Excluded',
+                        details: `${dept} is excluded from assignment`
+                    });
+                    return;
+                }
+                
+                // Track reason if subdivision is excluded
+                if (excludedSubdivs.has(key)) {
+                    unassignedStudents.push({
+                        ...student,
+                        reason: 'Subdivision Excluded',
+                        details: `${dept} - ${subdiv || '(No subdivision)'} is excluded from assignment`
+                    });
+                    return;
+                }
+                
+                // Find available mentor in same subdivision
+                const availableMentors = mentorPool[key] || [];
+                if (availableMentors.length === 0) {
+                    // If this is a BAT student (BAT-ACCT, BAT, or BAT-HLTH subdivision), defer to phase 2
+                    if (dept === 'BAT' && (subdiv === 'BAT-ACCT' || subdiv === 'BAT' || subdiv === 'BAT-HLTH')) {
+                        deferredBATStudents.push(student);
+                        return;
+                    }
+                    
+                    unassignedStudents.push({
+                        ...student,
+                        reason: 'No Mentors Available',
+                        details: `No mentors found for ${dept} - ${subdiv || '(No subdivision)'}`
+                    });
+                    return;
+                }
+                
+                // Find mentor with lowest caseload
+                availableMentors.sort((a, b) => a.currentLoad - b.currentLoad);
+                const selectedMentor = availableMentors.find(m => m.currentLoad < m.maxLoad);
+                
+                if (selectedMentor) {
+                    selectedMentor.currentLoad++;
+                    selectedMentor.newAssignments++;
+                    newAssignments.push({
+                        ...student,
+                        'Faculty Mentor': selectedMentor.name,
+                        'Mentor ID': selectedMentor.id,
+                        'Faculty Academic Department': selectedMentor.department,
+                        'Faculty Academic Department_sub': selectedMentor.subdivision,
+                        'Faculty Academic Department_home': selectedMentor.departmentHome,
+                        'Status': 'new'
+                    });
+                } else {
+                    // If this is a BAT student and mentors are at capacity, defer to phase 2
+                    if (dept === 'BAT' && (subdiv === 'BAT-ACCT' || subdiv === 'BAT' || subdiv === 'BAT-HLTH')) {
+                        deferredBATStudents.push(student);
+                    } else {
+                        unassignedStudents.push({
+                            ...student,
+                            reason: 'Mentors at Capacity',
+                            details: `All mentors in ${dept} - ${subdiv || '(No subdivision)'} are at maximum capacity`
+                        });
+                    }
+                }
+            });
+            
+            // PHASE 2: Assign deferred BAT students to any BAT mentor
+            deferredBATStudents.forEach(student => {
+                const dept = student['Student Academic Department'];
+                const subdiv = student['Student Academic Department_sub'];
+                
+                // Get all BAT mentors regardless of subdivision
+                const allBATMentors = mentorPoolByDept['BAT'] || [];
+                
+                if (allBATMentors.length === 0) {
+                    unassignedStudents.push({
+                        ...student,
+                        reason: 'No Mentors Available',
+                        details: `No BAT mentors available for flexible assignment`
+                    });
+                    return;
+                }
+                
+                // Find mentor with lowest caseload across all BAT
+                allBATMentors.sort((a, b) => a.currentLoad - b.currentLoad);
+                const selectedMentor = allBATMentors.find(m => m.currentLoad < m.maxLoad);
+                
+                if (selectedMentor) {
+                    selectedMentor.currentLoad++;
+                    selectedMentor.newAssignments++;
+                    newAssignments.push({
+                        ...student,
+                        'Faculty Mentor': selectedMentor.name,
+                        'Mentor ID': selectedMentor.id,
+                        'Faculty Academic Department': selectedMentor.department,
+                        'Faculty Academic Department_sub': selectedMentor.subdivision,
+                        'Faculty Academic Department_home': selectedMentor.departmentHome,
+                        'Status': 'new',
+                        'Assignment Note': `Cross-subdivision assignment: ${subdiv} student to ${selectedMentor.subdivision} mentor`
+                    });
+                } else {
+                    unassignedStudents.push({
+                        ...student,
+                        reason: 'All BAT Mentors at Capacity',
+                        details: `All mentors in BAT department are at maximum capacity (tried flexible assignment)`
+                    });
+                }
+            });
+            
+            // Display results
+            displayPostAssignmentStats();
+            displayFacultyDetails(mentorPool);
+            displayUnassignedAnalysis();
+            displayDepartmentSummary(mentorPool);
+            document.getElementById('exportButton').style.display = 'block';
+            document.getElementById('unassignedTabBtn').style.display = 'inline-block';
+            document.getElementById('deptSummaryTabBtn').style.display = 'inline-block';
+            
+            showAlert(`Successfully assigned ${newAssignments.length} students to mentors!`, 'success');
+        }
+
+        function getMaxLoad(limitType, limits, dept, subdiv) {
+            if (limitType === 'general') {
+                return limits.general || 30;
+            } else if (limitType === 'department') {
+                return limits[dept] || 30;
+            } else if (limitType === 'subdivision') {
+                const key = `${dept}|||${subdiv}`;
+                return limits[key] || 30;
+            }
+            return 30;
+        }
+
+        function displayPostAssignmentStats() {
+            const container = document.getElementById('postAssignmentStats');
+            container.style.display = 'block';
+            
+            const newStats = document.getElementById('newStats');
+            const totalAfter = processedData.assigned + newAssignments.length;
+            const remainingUnassigned = processedData.unassigned - newAssignments.length;
+            
+            newStats.innerHTML = `
+                <div class="stat-card">
+                    <h3>New Assignments</h3>
+                    <div class="stat-value">${newAssignments.length}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Assigned After</h3>
+                    <div class="stat-value">${totalAfter}</div>
+                    <div class="stat-label">${((totalAfter/processedData.total)*100).toFixed(1)}% of total</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Remaining Unassigned</h3>
+                    <div class="stat-value">${remainingUnassigned}</div>
+                    <div class="stat-label">${((remainingUnassigned/processedData.total)*100).toFixed(1)}% of total</div>
+                </div>
+            `;
+        }
+
+        function displayFacultyDetails(mentorPool) {
+            const container = document.getElementById('facultyDetails');
+            let html = '';
+            
+            // Group by department
+            const byDept = {};
+            Object.entries(mentorPool).forEach(([key, mentors]) => {
+                mentors.forEach(mentor => {
+                    if (!byDept[mentor.department]) {
+                        byDept[mentor.department] = {};
+                    }
+                    if (!byDept[mentor.department][mentor.subdivision]) {
+                        byDept[mentor.department][mentor.subdivision] = [];
+                    }
+                    byDept[mentor.department][mentor.subdivision].push(mentor);
+                });
+            });
+            
+            Object.entries(byDept).forEach(([dept, subdivs]) => {
+                // Calculate department-level statistics
+                let deptTotalMentors = 0;
+                let deptTotalStudents = 0;
+                
+                Object.values(subdivs).forEach(mentors => {
+                    deptTotalMentors += mentors.length;
+                    mentors.forEach(mentor => {
+                        deptTotalStudents += mentor.currentLoad;
+                    });
+                });
+                
+                const deptAvgCaseload = deptTotalMentors > 0 ? (deptTotalStudents / deptTotalMentors).toFixed(1) : 0;
+                
+                html += `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin: 20px 0 10px 0;">
+                        <h3 style="color: white; margin: 0;">${dept}</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 10px;">
+                            <div>
+                                <div style="font-size: 1.5em; font-weight: bold;">${deptTotalMentors}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Total Mentors</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5em; font-weight: bold;">${deptTotalStudents}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Total Students</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5em; font-weight: bold;">${deptAvgCaseload}</div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">Avg Caseload</div>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                Object.entries(subdivs).forEach(([subdiv, mentors]) => {
+                    // Calculate subdivision-level statistics
+                    const subdivTotalMentors = mentors.length;
+                    let subdivTotalStudents = 0;
+                    mentors.forEach(mentor => {
+                        subdivTotalStudents += mentor.currentLoad;
+                    });
+                    const subdivAvgCaseload = subdivTotalMentors > 0 ? (subdivTotalStudents / subdivTotalMentors).toFixed(1) : 0;
+                    
+                    html += `
+                        <div style="background: #f8f9ff; padding: 10px; border-radius: 8px; margin: 10px 0;">
+                            <h4 style="color: #667eea; margin: 0 0 10px 0;">${subdiv || '(No subdivision)'}</h4>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;">
+                                <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 1.3em; font-weight: bold; color: #333;">${subdivTotalMentors}</div>
+                                    <div style="font-size: 0.85em; color: #666;">Mentors</div>
+                                </div>
+                                <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 1.3em; font-weight: bold; color: #333;">${subdivTotalStudents}</div>
+                                    <div style="font-size: 0.85em; color: #666;">Students</div>
+                                </div>
+                                <div style="background: white; padding: 10px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 1.3em; font-weight: bold; color: #333;">${subdivAvgCaseload}</div>
+                                    <div style="font-size: 0.85em; color: #666;">Avg Caseload</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Mentor Name</th>
+                                        <th>Pre-existing</th>
+                                        <th>New</th>
+                                        <th>Total</th>
+                                        <th>Max Capacity</th>
+                                        <th>Utilization</th>
+                                        <th>Available Slots</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    
+                    mentors.sort((a, b) => b.currentLoad - a.currentLoad);
+                    mentors.forEach(mentor => {
+                        const utilization = (mentor.currentLoad / mentor.maxLoad * 100).toFixed(1);
+                        const color = utilization >= 90 ? '#ff6b6b' : utilization >= 70 ? '#ffc107' : '#4caf50';
+                        const availableSlots = mentor.maxLoad - mentor.currentLoad;
+                        html += `
+                            <tr>
+                                <td>${mentor.name}</td>
+                                <td>${mentor.preExistingLoad || 0}</td>
+                                <td>${mentor.newAssignments || 0}</td>
+                                <td><strong>${mentor.currentLoad}</strong></td>
+                                <td>${mentor.maxLoad}</td>
+                                <td><span style="color: ${color}; font-weight: bold;">${utilization}%</span></td>
+                                <td>${availableSlots > 0 ? availableSlots : '<span style="color: #ff6b6b;">Full</span>'}</td>
+                            </tr>`;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                });
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function displayDepartmentSummary(mentorPool) {
+            const container = document.getElementById('deptSummaryContent');
+
+            // Group by department and subdivision
+            const byDept = {};
+            Object.entries(mentorPool).forEach(([key, mentors]) => {
+                mentors.forEach(mentor => {
+                    if (!byDept[mentor.department]) {
+                        byDept[mentor.department] = {
+                            mentors: new Set(),
+                            totalStudents: 0,
+                            subdivisions: {}
+                        };
+                    }
+
+                    byDept[mentor.department].mentors.add(mentor.id);
+                    byDept[mentor.department].totalStudents += mentor.currentLoad;
+
+                    if (!byDept[mentor.department].subdivisions[mentor.subdivision]) {
+                        byDept[mentor.department].subdivisions[mentor.subdivision] = {
+                            mentors: new Set(),
+                            totalStudents: 0
+                        };
+                    }
+                    byDept[mentor.department].subdivisions[mentor.subdivision].mentors.add(mentor.id);
+                    byDept[mentor.department].subdivisions[mentor.subdivision].totalStudents += mentor.currentLoad;
+                });
+            });
+
+            let html = `
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Academic Department</th>
+                                <th>Academic Department_sub</th>
+                                <th>Number of Mentors</th>
+                                <th>Number of Students</th>
+                                <th>Avg Caseload per Mentor</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            // Sort departments alphabetically
+            const sortedDepts = Object.keys(byDept).sort();
+
+            // Calculate grand totals
+            let grandTotalMentors = new Set();
+            let grandTotalStudents = 0;
+            sortedDepts.forEach(dept => {
+                byDept[dept].mentors.forEach(id => grandTotalMentors.add(id));
+                grandTotalStudents += byDept[dept].totalStudents;
+            });
+            const grandTotalMentorCount = grandTotalMentors.size;
+            const grandAvgCaseload = grandTotalMentorCount > 0 ? (grandTotalStudents / grandTotalMentorCount).toFixed(1) : '0.0';
+
+            sortedDepts.forEach(dept => {
+                const deptData = byDept[dept];
+                const deptMentorCount = deptData.mentors.size;
+                const deptStudentCount = deptData.totalStudents;
+                const deptAvgCaseload = deptMentorCount > 0 ? (deptStudentCount / deptMentorCount).toFixed(1) : '0.0';
+
+                // Department total row (highlighted)
+                html += `
+                    <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold;">
+                        <td>${dept}</td>
+                        <td><em>(Department Total)</em></td>
+                        <td>${deptMentorCount}</td>
+                        <td>${deptStudentCount}</td>
+                        <td>${deptAvgCaseload}</td>
+                    </tr>`;
+
+                // Sort subdivisions alphabetically
+                const sortedSubdivs = Object.keys(deptData.subdivisions).sort();
+
+                sortedSubdivs.forEach(subdiv => {
+                    const subdivData = deptData.subdivisions[subdiv];
+                    const subdivMentorCount = subdivData.mentors.size;
+                    const subdivStudentCount = subdivData.totalStudents;
+                    const subdivAvgCaseload = subdivMentorCount > 0 ? (subdivStudentCount / subdivMentorCount).toFixed(1) : '0.0';
+
+                    html += `
+                        <tr>
+                            <td style="padding-left: 30px; color: #666;">↳</td>
+                            <td>${subdiv || '(No subdivision)'}</td>
+                            <td>${subdivMentorCount}</td>
+                            <td>${subdivStudentCount}</td>
+                            <td>${subdivAvgCaseload}</td>
+                        </tr>`;
+                });
+            });
+
+            // Add grand total row
+            html += `
+                    <tr style="background: #333; color: white; font-weight: bold; font-size: 1.1em;">
+                        <td colspan="2">GRAND TOTAL</td>
+                        <td>${grandTotalMentorCount}</td>
+                        <td>${grandTotalStudents}</td>
+                        <td>${grandAvgCaseload}</td>
+                    </tr>`;
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Summary Cards by Department</h3>
+                    <div class="dashboard-grid">`;
+
+            sortedDepts.forEach(dept => {
+                const deptData = byDept[dept];
+                const deptMentorCount = deptData.mentors.size;
+                const deptStudentCount = deptData.totalStudents;
+                const deptAvgCaseload = deptMentorCount > 0 ? (deptStudentCount / deptMentorCount).toFixed(1) : '0.0';
+
+                html += `
+                    <div class="stat-card">
+                        <h3>${dept}</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #667eea;">${deptMentorCount}</div>
+                                <div style="font-size: 0.8em; color: #666;">Mentors</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #4caf50;">${deptStudentCount}</div>
+                                <div style="font-size: 0.8em; color: #666;">Students</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">${deptAvgCaseload}</div>
+                                <div style="font-size: 0.8em; color: #666;">Avg Load</div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            html += `
+                    </div>
+                </div>`;
+
+            container.innerHTML = html;
+        }
+
+        // Export functionality
+        document.getElementById('exportButton').addEventListener('click', function() {
+            exportToCSV();
+        });
+
+        function exportToCSV() {
+            const activeMentorIds = new Set(facultyData.map(f => f['Staff_ID']));
+            const finalData = [];
+            
+            studentData.forEach(student => {
+                const existingAssignment = newAssignments.find(a => 
+                    a['Student ID'] === student['Student ID']
+                );
+                
+                if (existingAssignment) {
+                    finalData.push(existingAssignment);
+                } else if (student['Mentor ID'] && activeMentorIds.has(student['Mentor ID'])) {
+                    finalData.push({
+                        ...student,
+                        'Status': 'pre-existing'
+                    });
+                } else {
+                    finalData.push({
+                        ...student,
+                        'Status': 'unassigned'
+                    });
+                }
+            });
+            
+            // Convert to CSV
+            const headers = Object.keys(finalData[0]);
+            let csv = headers.join(',') + '\n';
+            
+            finalData.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header] || '';
+                    return value.toString().includes(',') ? `"${value}"` : value;
+                });
+                csv += values.join(',') + '\n';
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `caseload_assignments_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showAlert('CSV exported successfully!', 'success');
+        }
+
+        function displayUnassignedAnalysis() {
+            const container = document.getElementById('unassignedAnalysis');
+            
+            if (unassignedStudents.length === 0) {
+                container.innerHTML = '<p style="color: green; font-size: 1.2em; padding: 20px;">All eligible students were successfully assigned to mentors!</p>';
+                return;
+            }
+            
+            // Group unassigned students by reason and department/subdivision
+            const byReason = {};
+            const byDepartment = {};
+            
+            unassignedStudents.forEach(student => {
+                const reason = student.reason;
+                const dept = student['Student Academic Department'];
+                const subdiv = student['Student Academic Department_sub'];
+                
+                // Group by reason
+                if (!byReason[reason]) {
+                    byReason[reason] = [];
+                }
+                byReason[reason].push(student);
+                
+                // Group by department and subdivision
+                if (!byDepartment[dept]) {
+                    byDepartment[dept] = {};
+                }
+                if (!byDepartment[dept][subdiv]) {
+                    byDepartment[dept][subdiv] = {
+                        students: [],
+                        reasons: {}
+                    };
+                }
+                byDepartment[dept][subdiv].students.push(student);
+                
+                if (!byDepartment[dept][subdiv].reasons[reason]) {
+                    byDepartment[dept][subdiv].reasons[reason] = 0;
+                }
+                byDepartment[dept][subdiv].reasons[reason]++;
+            });
+            
+            let html = `
+                <div class="alert warning" style="display: block; margin-bottom: 20px;">
+                    <strong>${unassignedStudents.length} students</strong> could not be assigned to mentors
+                </div>
+                
+                <h3>Summary by Reason</h3>
+                <div class="dashboard-grid" style="margin-bottom: 30px;">`;
+            
+            Object.entries(byReason).forEach(([reason, students]) => {
+                let iconColor = '#ff6b6b';
+                if (reason === 'Department Excluded' || reason === 'Subdivision Excluded') {
+                    iconColor = '#ffc107';
+                } else if (reason === 'No Mentors Available') {
+                    iconColor = '#dc3545';
+                }
+                
+                html += `
+                    <div class="stat-card">
+                        <h3 style="color: ${iconColor};">${reason}</h3>
+                        <div class="stat-value">${students.length}</div>
+                        <div class="stat-label">${((students.length/unassignedStudents.length)*100).toFixed(1)}% of unassigned</div>
+                    </div>`;
+            });
+            
+            html += `</div>
+                
+                <h3>Breakdown by Department & Subdivision</h3>`;
+            
+            Object.entries(byDepartment).forEach(([dept, subdivs]) => {
+                // Calculate department totals
+                let deptTotal = 0;
+                Object.values(subdivs).forEach(subdivData => {
+                    deptTotal += subdivData.students.length;
+                });
+                
+                html += `
+                    <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; padding: 15px; border-radius: 10px; margin: 20px 0 10px 0;">
+                        <h4 style="color: white; margin: 0;">${dept}</h4>
+                        <div style="font-size: 1.2em; margin-top: 5px;">
+                            ${deptTotal} unassigned students
+                        </div>
+                    </div>`;
+                
+                Object.entries(subdivs).forEach(([subdiv, subdivData]) => {
+                    html += `
+                        <div style="background: #fff5f5; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #ff6b6b;">
+                            <h5 style="color: #333; margin: 0 0 10px 0;">${subdiv || '(No subdivision)'}</h5>
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                                <div>
+                                    <div style="font-size: 1.5em; font-weight: bold; color: #ff6b6b;">${subdivData.students.length}</div>
+                                    <div style="font-size: 0.9em; color: #666;">Unassigned Students</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Reasons:</div>`;
+                    
+                    Object.entries(subdivData.reasons).forEach(([reason, count]) => {
+                        html += `<div style="background: white; padding: 5px 10px; border-radius: 5px; margin-bottom: 5px;">
+                                    <strong>${reason}:</strong> ${count} student${count > 1 ? 's' : ''}
+                                </div>`;
+                    });
+                    
+                    html += `</div></div>`;
+                    
+                    // Add student details table
+                    html += `
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: 500;">View Student Details</summary>
+                            <div class="data-table" style="margin-top: 10px;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Name</th>
+                                            <th>GPA</th>
+                                            <th>Reason Not Assigned</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+                    
+                    subdivData.students.forEach(student => {
+                        html += `
+                            <tr>
+                                <td>${student['Student ID']}</td>
+                                <td>${student['Name'] || 'N/A'}</td>
+                                <td>${student['Cumulative GPA'] || 'N/A'}</td>
+                                <td style="color: #dc3545;">${student.reason}</td>
+                            </tr>`;
+                    });
+                    
+                    html += `</tbody></table></div></details></div>`;
+                });
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+    </script>
+</body>
+</html>
